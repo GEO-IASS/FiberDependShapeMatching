@@ -1,0 +1,4 @@
+﻿  main.cpp
+main.obj : error LNK2001: unresolved external symbol "public: void __cdecl Render::SetCameraModelview(struct glm::tmat4x4<float,0>)" (?SetCameraModelview@Render@@QEAAXU?$tmat4x4@M$0A@@glm@@@Z)
+main.obj : error LNK2001: unresolved external symbol "public: void __cdecl Render::SetCameraProjection(struct glm::tmat4x4<float,0>)" (?SetCameraProjection@Render@@QEAAXU?$tmat4x4@M$0A@@glm@@@Z)
+E:\Code\FiberDependShapeMatching\fiberdepend\x64\Release\fiberdepend.exe : fatal error LNK1120: 2 unresolved externals
