@@ -53,6 +53,13 @@ public:
 	inline MeshType GetMeshType() { return m_mesh_type; }
 	void set_scale(double num) { m_tet_scaling = num; }
 
+public:
+	//get num
+	uint GetVertexNum() { return m_vert_num;  }
+	uint GetTetNum() { return m_T.size(); }
+	Eigen::Vector3d GetVertex(const int i) { return m_V[i]; }
+	int GetTetra(const int i, const int j) { return m_T[i][j]; }
+
 protected:
 	MeshType m_mesh_type;
 
@@ -61,11 +68,11 @@ protected:
 	uint m_system_dim; // 3m
 	//uint 
 
-	EigenMatrixXs m_V0;	// rest pose
-	EigenMatrixXs m_V;	// current pose
-	EigenMatrixXs m_N;	// current normal
-	EigenMatrixXi m_F;  // tri index
-	EigenMatrixXi m_T;  // tet index
+	std::vector<Eigen::Vector3d> m_V0;	// rest pose
+	std::vector<Eigen::Vector3d> m_V;	// current pose
+	std::vector<Eigen::Vector3d> m_N;	// current normal
+	std::vector<std::vector<int>> m_F;  // tri index
+	std::vector<std::vector<int>> m_T;  // tet index
 
 						// for visualization
 	std::vector<glm::vec3> m_positions;
@@ -85,6 +92,7 @@ protected:
 	virtual void generateTriangleList() { std::cout << "Warning: reach base class virtual function." << std::endl; } // generate triangle list from vetices
 
 	void computeNormal();
+
 };
 
 class TetMesh : public Mesh

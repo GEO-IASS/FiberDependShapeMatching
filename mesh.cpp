@@ -32,7 +32,7 @@ void Mesh::draw(const VBO& vbos, bool wire_frame, int show_texture)// draw using
 	{
 		for (uint j = 0; j<m_dim; ++j)
 		{
-			m_positions[i][j] = m_V(i, j);
+			m_positions[i][j] = m_V[i][j];
 		}
 	}
 
@@ -44,7 +44,6 @@ void Mesh::draw(const VBO& vbos, bool wire_frame, int show_texture)// draw using
 	uint size = m_vert_num;
 	uint element_num = m_triangle_list.size();
 
-	//
 
 	// position
 	glBindBuffer(GL_ARRAY_BUFFER, vbos.m_vbo);
@@ -197,37 +196,37 @@ void TetMesh::generateParticleList()
 	
 	//set initial parameter for e
 
-	m_V0.resize(m_vert_num, 3 );	// rest pose
-	m_V.resize(m_vert_num, 3);	// current pose
+	m_V0.resize(m_vert_num);	// rest pose
+	m_V.resize(m_vert_num);	// current pose
 //	m_N.resize(m_vert_num, 3);	// current normal
-	m_F.resize(m_faces, 3);  // tri index
-	m_T.resize(m_tets, 4);  // tet index
+	m_F.resize(m_faces);  // tri index
+	m_T.resize(m_tets);  // tet index
 
 	for (uint i = 0; i<m_vert_num; ++i)
 	{
 		for (uint j = 0; j<m_dim; ++j)
 		{
-			m_V0(i, j) = m_loaded_mesh->m_vertices[i][j];
-			m_V(i, j) = m_loaded_mesh->m_vertices[i][j];
+			m_V0[i] [j] = m_loaded_mesh->m_vertices[i][j];
+			m_V[i][j] = m_loaded_mesh->m_vertices[i][j];
 		}
 	}
 
 	for (uint i = 0; i<m_faces; ++i)
 	{
-		
-			m_F(i, 0) = m_loaded_mesh->m_faces[i].id1;
-			m_F(i, 1) = m_loaded_mesh->m_faces[i].id2;
-			m_F(i, 2) = m_loaded_mesh->m_faces[i].id3;
+		m_F[i].resize(3);
+			m_F[i] [0] = m_loaded_mesh->m_faces[i].id1;
+			m_F[i] [1] = m_loaded_mesh->m_faces[i].id2;
+			m_F[i] [2] = m_loaded_mesh->m_faces[i].id3;
 
 	}
 
 	for (uint i = 0; i<m_tets; ++i)
 	{
-
-		m_T(i, 0) = m_loaded_mesh->m_tets[i].id1;
-		m_T(i, 1) = m_loaded_mesh->m_tets[i].id2;
-		m_T(i, 2) = m_loaded_mesh->m_tets[i].id3;
-		m_T(i, 3) = m_loaded_mesh->m_tets[i].id4;
+		m_T[i].resize(4);
+		m_T[i][ 0] = m_loaded_mesh->m_tets[i].id1;
+		m_T[i][ 1] = m_loaded_mesh->m_tets[i].id2;
+		m_T[i][ 2] = m_loaded_mesh->m_tets[i].id3;
+		m_T[i][ 3] = m_loaded_mesh->m_tets[i].id4;
 
 	}
 
@@ -250,13 +249,13 @@ void TetMesh::generateTriangleList()
 {
 	std::cout << "TetMesh::TriangleList Generating..." << std::endl;
 
-	m_triangle_list.resize(m_F.rows() * 3); // #triangle * 3
+	m_triangle_list.resize(m_F.size() * 3); // #triangle * 3
 
-	for (int i = 0; i != m_F.rows(); ++i)
+	for (int i = 0; i != m_F.size(); ++i)
 	{
-		m_triangle_list[3 * i + 0] = m_F(i, 0);
-		m_triangle_list[3 * i + 1] = m_F(i, 1);
-		m_triangle_list[3 * i + 2] = m_F(i, 2);
+		m_triangle_list[3 * i + 0] = m_F[i][ 0];
+		m_triangle_list[3 * i + 1] = m_F[i][ 1];
+		m_triangle_list[3 * i + 2] = m_F[i][ 2];
 	}
 }
 #pragma endregion

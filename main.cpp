@@ -12,7 +12,6 @@
 #include "common.h"
 #include "camera.h"
 
-
 static int WIN_WIDTH = 1280;                       // ウィンドウの幅
 static int WIN_HEIGHT = 720;                       // ウィンドウの高さ
 static const char *WIN_TITLE = "BOYOB_BOYON";

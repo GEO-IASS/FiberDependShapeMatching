@@ -48,6 +48,9 @@
     <ClCompile Include="mouse.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="Simulation.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glsl.h">
@@ -72,6 +75,9 @@
       <Filter>ソース ファイル\camera</Filter>
     </ClInclude>
     <ClInclude Include="window.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

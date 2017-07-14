@@ -60,7 +60,7 @@ void Camera::Lookat(Mesh* mesh)
 {
 	unsigned int mid_index = mesh->m_vert_num / 2;
 
-	EigenVector3 lookat = { mesh->m_V(mid_index, 0), mesh->m_V(mid_index, 1), mesh->m_V(mid_index, 2) };
+	EigenVector3 lookat = mesh->m_V[mid_index];// [0], mesh->m_V[mid_index, 1), mesh->m_V(mid_index, 2) };
 	m_lookat = glm::vec3(lookat[0], lookat[1], lookat[2]);
 	updateViewMatrix();
 }
