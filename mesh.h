@@ -59,6 +59,7 @@ public:
 	uint GetTetNum() { return m_T.size(); }
 	Eigen::Vector3d GetVertex(const int i) { return m_V[i]; }
 	int GetTetra(const int i, const int j) { return m_T[i][j]; }
+	void SetVertex(const int i, Eigen::Vector3d _vert) { m_V[i] = _vert; }
 
 protected:
 	MeshType m_mesh_type;

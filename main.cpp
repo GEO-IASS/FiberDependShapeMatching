@@ -11,14 +11,18 @@
 #include"glsl.h"
 #include "common.h"
 #include "camera.h"
+#include "Simulation.h"
 
 static int WIN_WIDTH = 1280;                       // ウィンドウの幅
 static int WIN_HEIGHT = 720;                       // ウィンドウの高さ
 static const char *WIN_TITLE = "BOYOB_BOYON";
 
+int count = 1.0;
+
 Render* render;
 TetMesh * mesh;
 Camera *camera;
+Simulation *simulation;
 
 //----------Control--------------------//
 int mouse_old_x, mouse_old_y;
@@ -50,8 +54,16 @@ void paintGL() {
 	render->DeactivateShaderprog();
 
 
+
 }
 
+void update() {
+	simulation->Update();
+	simulation->SetElement();
+	simulation->Positon_to_mesh();
+	std::cout << count << std::endl;
+	count++;
+}
 
 void initializeGL() {
 	//背景色の決定
@@ -76,6 +88,10 @@ void initializeGL() {
 	mesh->Init();
 	//mesh->
 	camera->Reset(DEFAULT_SCREEN_WIDTH,DEFAULT_SCREEN_HEIGHT);
+
+	simulation = new Simulation();
+	simulation->SetMesh(mesh);
+	simulation->Init();
 
 }
 
@@ -113,14 +129,10 @@ int main(int argc, char **argv) {
 
 
 	while (glfwWindowShouldClose(window) == GL_FALSE) {
+		// アニメーション
+		update();
 		// 描画
 		paintGL();
-
-		// アニメーション
-	//	update();
-
-
-
 		// 描画用バッファの切り替え
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

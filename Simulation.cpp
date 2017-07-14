@@ -1,7 +1,5 @@
 #include "Simulation.h"
 
-
-
 Simulation::Simulation()
 {
 }
@@ -32,6 +30,8 @@ void Simulation:: Init() {//should after meshs
 	Mg_element_pos.resize(mesh->GetVertexNum());	//Current center of mass element pos	(mesh->GetVertexNum(),3)
 	Dg_element_pos.resize(mesh->GetVertexNum());	//   Rest center of mass element pos		(mesh->GetVertexNum(),3)
 
+	weight_vec.resize(mesh->GetVertexNum());
+	weight_vec_init.resize(mesh->GetVertexNum());
 
 	for (uint i = 0; i<mesh->GetVertexNum(); ++i)
 	{
@@ -39,8 +39,32 @@ void Simulation:: Init() {//should after meshs
 		D_pos[i] = mesh->GetVertex(i);
 		velocity[i].setZero();
 		f_ext[i].setZero();
-		f_g[i].setZero();
+//		f_g[i].setZero();
+		f_g[i] = { 0.0,10.0,0.0 };
+
+
 	}
+
+	for (int i = 0; i < mesh->GetVertexNum(); i++)
+	{
+		element_pos[i].resize(Onering[i].size());
+		D_element_pos[i].resize(Onering[i].size());
+		for (int j = 0; j < Onering[i].size(); j++)
+		{
+			int index = Onering[i][j];
+			D_element_pos[i][j] = D_pos[index];
+			element_pos[i][j] = pos[index];
+		}
+	}
+
+
+	for (uint i = 0; i<mesh->GetVertexNum(); ++i)
+	{
+		weight_vec[i] = { 1.0,0.0,0.0 };
+		weight_vec_init[i] = {1.0,0.0,0.0};
+
+	}
+
 
 
 	Matrix_A.resize(mesh->GetVertexNum());				//(mesh->GetVertexNum(), 3,3)
@@ -61,6 +85,21 @@ void Simulation:: Init() {//should after meshs
 
 		_Bone.push_back(i);
 	}
+
+
+//should calculate gravity 
+	for (int i = 0; i < _Bone.size(); i++) {
+		int index = _Bone[i];
+		GetCenterOfGravity(D_element_pos[index], Dg_element_pos[index], index, 1.0);
+		GetCenterOfGravity(element_pos[index], Mg_element_pos[index], index, 1.0);
+//		std::cout << index << "::::" << Dg_element_pos[index][0] << ":::::::::::::::::::::::::::" << Mg_element_pos[index][0] << std::endl;
+
+	}
+
+	std::cout << "Finish initialize SM" << std::endl;
+	std::cout << _Bone.size() << std::endl;
+	std::cout << mesh->GetVertexNum() << std::endl;
+
 }
 
 void Simulation::ComputeOnering() {
@@ -102,7 +141,9 @@ void Simulation::ComputeOnering() {
 	for (int i = 0; i < mesh->GetVertexNum(); i++) {
 		for (int j = 0; j < Onering[i].size(); j++) {
 			Onering[i][j] = Onering[i][j] - 1;
+			//std::cout << Onering[i][j] << "::::";
 		}
+		//std::cout << "" << std::endl;
 	}
 
 }
@@ -161,8 +202,17 @@ void Simulation::GetManipulateMatrix(int ele, double _beta) {
 		Matrix_Aqq[ele] += SetWeight(index, ele, _beta) *qq;
 
 	}
-	Matrix_A[ele] = Matrix_Apq[ele] * Matrix_Aqq[ele].inverse();
+	//Matrix_A[ele] = Matrix_Apq[ele] * Matrix_Aqq[ele].inverse();
+	//std::cout << Matrix_A[ele] << std::endl;
+	Eigen::Matrix3d E;
 
+	Eigen::FullPivLU<Eigen::Matrix3d> lu(Matrix_Aqq[ele]);
+	Eigen::Matrix3d A_qq_ele;
+	E.Identity();
+	A_qq_ele = lu.inverse();
+
+	Matrix_A[ele] = Matrix_Apq[ele] * A_qq_ele;
+	//std::cout << Matrix_A[ele] << std::endl;
 }
 
 
@@ -300,13 +350,14 @@ void Simulation::GetGoalPosition(Eigen::Vector3d &goal, int ele, double _beta) {
 
 
 void Simulation::Update() {
-	
+	//
 	// Calculation current center of gravity
 	for (int i = 0; i < _Bone.size(); i++) {
 		int index = _Bone[i];
 		GetCenterOfGravity(element_pos[index], Mg_element_pos[index], index, 1.0);
-	}
+	//	std::cout << Mg_element_pos[index][0]<<":::"<<Mg_element_pos[index][1]<< ":::" << Mg_element_pos[index][2] << std::endl;
 
+	}
 	for (int i = 0; i < _Bone.size(); i++) {
 		int index = _Bone[i];
 		GetManipulateMatrix(index, 1.0);
@@ -314,10 +365,10 @@ void Simulation::Update() {
 
 	for (int i = 0; i < _Bone.size(); i++) {
 		int index = _Bone[i];
-		extractRotation(Matrix_A[index], RotMat[index], 20);
+		extractRotation(Matrix_A[index], RotMat[index], 1);
 	}
 
-	//---no constraint
+	////---no constraint
 	for (int i = 0; i < _Bone.size(); i++) {
 		int index = _Bone[i];
 		Integration(index, 1.0, 1.0);
@@ -330,10 +381,28 @@ void Simulation::Positon_to_mesh() {
 
 	for (uint i = 0; i<mesh->GetVertexNum(); ++i)
 	{
-		mesh->GetVertex(i) = pos[i] ;
+		mesh->SetVertex(i, pos[i]) ;
 	}
 
 }
+
+
+void Simulation::SetElement() {
+	for (int i = 0; i <mesh->GetVertexNum(); i++)
+	{
+		for (int j = 0; j < Onering[i].size(); j++)
+		{
+			int index = Onering[i][j];
+			element_pos[i][j] = pos[index];
+		}
+	}
+
+	DeformVector();
+
+}
+
+
+
 //void Simulation::SetBasisMatrix(int i) {
 
 //Matrix_T[i](0, 0) = weight_vec[i](0);

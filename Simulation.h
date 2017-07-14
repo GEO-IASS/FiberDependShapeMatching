@@ -8,11 +8,11 @@ public:
 	~Simulation();
 
 	Mesh *mesh;
-	void SetMesh(Mesh * i_mesh) { mesh = i_mesh; }
+	void SetMesh(Mesh * i_mesh) { mesh = i_mesh, ComputeOnering(); }
 	void Init();
 
 	double mass = 1.0;
-	double time = 0.033;
+	double time = 0.33;
 
 	//set parameter
 
@@ -33,7 +33,12 @@ public:
 	std::vector<Eigen::Vector3d> Mg_element_pos;			//element vertex (center of mass//current)        (vertnum,3)
 	std::vector<Eigen::Vector3d> Dg_element_pos;			//element vertex (center of mass//init)           (vertnum,3)
 
-	
+	//-------------------------Fiber vector-------------------------------------------//
+
+	std::vector<Eigen::Vector3d>   weight_vec;					        //weight vector         (vertnum,3)   illustrationg as a color in
+	std::vector<Eigen::Vector3d>   weight_vec_init;					    //weight vector init       (vertnum,3)
+
+
    //--------------------------Region Calcurate ------------------------------------//
 	
    // Make Matrix Rotmat and Matrix A
@@ -67,6 +72,7 @@ public:
 
 	//-----------------prepare calculation for next------------------//
 	void DeformVector();
+	void SetElement();
 
 	
 	//-------------gola position-------------------------------------//
@@ -74,11 +80,6 @@ public:
 	void Integration_bone(int ele, double alpha);
 	void Integration(int ele, double alpha, double _beta);
 
-
-
-	//for fiber vector
-	std::vector<Eigen::Vector3d>   weight_vec;					        //weight vector         (vertnum,3)   illustrationg as a color in
-	std::vector<Eigen::Vector3d>   weight_vec_init;					    //weight vector init       (vertnum,3)
 
 	//--------------------set region 
 	std::vector <int > _Bone;

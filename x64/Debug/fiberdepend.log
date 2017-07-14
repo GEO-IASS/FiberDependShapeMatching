@@ -1,2 +1,30 @@
-﻿  Simulation.cpp
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp : fatal error C1041: cannot open program database 'E:\Code\FiberDependShapeMatching\fiberdepend\fiberdepend\x64\Debug\vc140.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
+﻿  main.cpp
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.h(59): warning C4267: 'return': conversion from 'size_t' to 'uint', possible loss of data
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\main.cpp(172): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\main.cpp(173): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\main.cpp(179): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\main.cpp(182): warning C4244: 'argument': conversion from 'ScalarType' to 'float', possible loss of data
+  Simulation.cpp
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.h(59): warning C4267: 'return': conversion from 'size_t' to 'uint', possible loss of data
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(50): warning C4018: '<': signed/unsigned mismatch
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(78): warning C4018: '<': signed/unsigned mismatch
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(111): warning C4018: '<': signed/unsigned mismatch
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(136): warning C4018: '<': signed/unsigned mismatch
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(142): warning C4018: '<': signed/unsigned mismatch
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(288): warning C4018: '<': signed/unsigned mismatch
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(392): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
+  Compiling...
+  mesh.cpp
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.cpp(8): warning C4068: unknown pragma
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.cpp(35): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.cpp(160): warning C4244: 'argument': conversion from 'ScalarType' to 'float', possible loss of data
+  camera.cpp
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.h(59): warning C4267: 'return': conversion from 'size_t' to 'uint', possible loss of data
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\camera.cpp(52): warning C4305: '=': truncation from 'double' to 'float'
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\camera.cpp(145): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+e:\code\fiberdependshapematching\fiberdepend\fiberdepend\camera.cpp(152): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  Generating Code...
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  fiberdepend.vcxproj -> E:\Code\FiberDependShapeMatching\fiberdepend\x64\Debug\fiberdepend.exe
+  fiberdepend.vcxproj -> E:\Code\FiberDependShapeMatching\fiberdepend\x64\Debug\fiberdepend.pdb (Full PDB)
