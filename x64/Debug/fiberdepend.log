@@ -1,30 +1,47 @@
-﻿  main.cpp
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.h(59): warning C4267: 'return': conversion from 'size_t' to 'uint', possible loss of data
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\main.cpp(172): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\main.cpp(173): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\main.cpp(179): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\main.cpp(182): warning C4244: 'argument': conversion from 'ScalarType' to 'float', possible loss of data
-  Simulation.cpp
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.h(59): warning C4267: 'return': conversion from 'size_t' to 'uint', possible loss of data
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(50): warning C4018: '<': signed/unsigned mismatch
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(78): warning C4018: '<': signed/unsigned mismatch
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(111): warning C4018: '<': signed/unsigned mismatch
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(136): warning C4018: '<': signed/unsigned mismatch
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(142): warning C4018: '<': signed/unsigned mismatch
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(288): warning C4018: '<': signed/unsigned mismatch
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\simulation.cpp(392): warning C4018: '<': signed/unsigned mismatch
-  Generating Code...
-  Compiling...
-  mesh.cpp
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.cpp(8): warning C4068: unknown pragma
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.cpp(35): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.cpp(160): warning C4244: 'argument': conversion from 'ScalarType' to 'float', possible loss of data
-  camera.cpp
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\mesh.h(59): warning C4267: 'return': conversion from 'size_t' to 'uint', possible loss of data
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\camera.cpp(52): warning C4305: '=': truncation from 'double' to 'float'
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\camera.cpp(145): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-e:\code\fiberdependshapematching\fiberdepend\fiberdepend\camera.cpp(152): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-  Generating Code...
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-  fiberdepend.vcxproj -> E:\Code\FiberDependShapeMatching\fiberdepend\x64\Debug\fiberdepend.exe
-  fiberdepend.vcxproj -> E:\Code\FiberDependShapeMatching\fiberdepend\x64\Debug\fiberdepend.pdb (Full PDB)
+﻿  Simulation.cpp
+e:\code\collision\fiberdepend\fiberdepend\mesh.h(59): warning C4244: 'return': conversion from '__int64' to 'uint', possible loss of data
+e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(266): warning C4018: '<': signed/unsigned mismatch
+e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(284): warning C4018: '<': signed/unsigned mismatch
+e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(308): warning C4018: '<': signed/unsigned mismatch
+e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(261): warning C4101: 'i': unreferenced local variable
+e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(324): warning C4018: '<': signed/unsigned mismatch
+e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(384): warning C4838: conversion from 'int' to 'uint' requires a narrowing conversion
+e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(404): warning C4018: '<': signed/unsigned mismatch
+e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(446): warning C4838: conversion from 'int' to 'uint' requires a narrowing conversion
+e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(463): warning C4244: 'argument': conversion from '__int64' to 'int', possible loss of data
+e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(474): warning C4838: conversion from 'int' to 'uint' requires a narrowing conversion
+e:\graphic\lib\libigl\include\igl\massmatrix.cpp(26): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+  e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(93): note: see reference to function template instantiation 'void igl::massmatrix<Derived,Eigen::Matrix<int,-1,-1,0,-1,-1>,ScalarType>(const Eigen::MatrixBase<Derived> &,const Eigen::MatrixBase<Eigen::Matrix<int,-1,-1,0,-1,-1>> &,const igl::MassMatrixType,Eigen::SparseMatrix<ScalarType,0,int> &)' being compiled
+          with
+          [
+              Derived=Eigen::Matrix<double,-1,-1,0,-1,-1>
+          ]
+e:\graphic\lib\libigl\include\igl\massmatrix.cpp(26): warning C4244: 'initializing': conversion from '__int64' to 'const int', possible loss of data
+e:\graphic\lib\libigl\include\igl\massmatrix.cpp(27): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+e:\graphic\lib\libigl\include\igl\massmatrix.cpp(27): warning C4244: 'initializing': conversion from '__int64' to 'const int', possible loss of data
+e:\graphic\lib\libigl\include\igl\massmatrix.cpp(28): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+e:\graphic\lib\libigl\include\igl\massmatrix.cpp(28): warning C4244: 'initializing': conversion from '__int64' to 'const int', possible loss of data
+e:\graphic\lib\libigl\include\igl\sparse.cpp(65): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  e:\graphic\lib\libigl\include\igl\massmatrix.cpp(152): note: see reference to function template instantiation 'void igl::sparse<Eigen::Matrix<int,-1,1,0,-1,1>,Eigen::Matrix<double,-1,1,0,-1,1>,ScalarType>(const IndexVector &,const IndexVector &,const ValueVector &,const std::size_t,const std::size_t,Eigen::SparseMatrix<ScalarType,0,int> &)' being compiled
+          with
+          [
+              IndexVector=Eigen::Matrix<int,-1,1,0,-1,1>,
+              ValueVector=Eigen::Matrix<double,-1,1,0,-1,1>
+          ]
+  e:\code\collision\fiberdepend\fiberdepend\simulation.cpp(93): note: see reference to function template instantiation 'void igl::massmatrix<Derived,Eigen::Matrix<int,-1,-1,0,-1,-1>,ScalarType>(const Eigen::MatrixBase<Derived> &,const Eigen::MatrixBase<Eigen::Matrix<int,-1,-1,0,-1,-1>> &,const igl::MassMatrixType,Eigen::SparseMatrix<ScalarType,0,int> &)' being compiled
+          with
+          [
+              Derived=Eigen::Matrix<double,-1,-1,0,-1,-1>
+          ]
+e:\graphic\lib\libigl\include\igl\sort.cpp(28): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+  e:\graphic\lib\libigl\include\igl\doublearea.cpp(145): note: see reference to function template instantiation 'void igl::sort<Eigen::Matrix<double,-1,3,0,-1,3>,Eigen::Matrix<double,-1,3,0,-1,3>,Eigen::Matrix<int,-1,-1,0,-1,-1>>(const Eigen::PlainObjectBase<Eigen::Matrix<double,-1,3,0,-1,3>> &,const int,const bool,Eigen::PlainObjectBase<Eigen::Matrix<double,-1,3,0,-1,3>> &,Eigen::PlainObjectBase<Eigen::Matrix<int,-1,-1,0,-1,-1>> &)' being compiled
+  e:\graphic\lib\libigl\include\igl\massmatrix.cpp(56): note: see reference to function template instantiation 'void igl::doublearea<Eigen::Matrix<double,-1,3,0,-1,3>,Eigen::Matrix<double,-1,1,0,-1,1>>(const Eigen::PlainObjectBase<Eigen::Matrix<double,-1,3,0,-1,3>> &,Eigen::PlainObjectBase<Eigen::Matrix<double,-1,1,0,-1,1>> &)' being compiled
+e:\graphic\lib\libigl\include\igl\sort.cpp(36): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+e:\graphic\lib\libigl\include\igl\sort.cpp(67): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+e:\graphic\lib\libigl\include\igl\sort.cpp(71): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+e:\graphic\lib\libigl\include\igl\sort.cpp(153): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+  e:\graphic\lib\libigl\include\igl\sort.cpp(32): note: see reference to function template instantiation 'void igl::sort2<Eigen::Matrix<double,-1,3,0,-1,3>,Eigen::Matrix<double,-1,3,0,-1,3>,Eigen::Matrix<int,-1,-1,0,-1,-1>>(const Eigen::PlainObjectBase<Eigen::Matrix<double,-1,3,0,-1,3>> &,const int,const bool,Eigen::PlainObjectBase<Eigen::Matrix<double,-1,3,0,-1,3>> &,Eigen::PlainObjectBase<Eigen::Matrix<int,-1,-1,0,-1,-1>> &)' being compiled
+  e:\graphic\lib\libigl\include\igl\doublearea.cpp(145): note: see reference to function template instantiation 'void igl::sort<Eigen::Matrix<double,-1,3,0,-1,3>,Eigen::Matrix<double,-1,3,0,-1,3>,Eigen::Matrix<int,-1,-1,0,-1,-1>>(const Eigen::PlainObjectBase<Eigen::Matrix<double,-1,3,0,-1,3>> &,const int,const bool,Eigen::PlainObjectBase<Eigen::Matrix<double,-1,3,0,-1,3>> &,Eigen::PlainObjectBase<Eigen::Matrix<int,-1,-1,0,-1,-1>> &)' being compiled
+e:\graphic\lib\libigl\include\igl\sort.cpp(155): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+  fiberdepend.vcxproj -> E:\Code\Collision\fiberdepend\x64\Debug\fiberdepend.exe
+  fiberdepend.vcxproj -> E:\Code\Collision\fiberdepend\x64\Debug\fiberdepend.pdb (Full PDB)

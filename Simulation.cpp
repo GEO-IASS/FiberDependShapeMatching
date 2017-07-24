@@ -11,426 +11,594 @@ Simulation::~Simulation()
 
 }
 
-
-void Simulation:: Init() {//should after meshs
-
-	//set size
-
-	pos.resize(mesh->GetVertexNum());
-	D_pos.resize(mesh->GetVertexNum());
-	velocity.resize(mesh->GetVertexNum());
-	f_ext.resize(mesh->GetVertexNum());
-	f_g.resize(mesh->GetVertexNum());
-
-	
-
-	element_pos.resize(mesh->GetVertexNum());	//Rest gravity element pos		(mesh->GetVertexNum(),3)
-	D_element_pos.resize(mesh->GetVertexNum());	//Current gravity element pos	(mesh->GetVertexNum(),3)
-
-	Mg_element_pos.resize(mesh->GetVertexNum());	//Current center of mass element pos	(mesh->GetVertexNum(),3)
-	Dg_element_pos.resize(mesh->GetVertexNum());	//   Rest center of mass element pos		(mesh->GetVertexNum(),3)
-
-	weight_vec.resize(mesh->GetVertexNum());
-	weight_vec_init.resize(mesh->GetVertexNum());
-
-	for (uint i = 0; i<mesh->GetVertexNum(); ++i)
-	{
-		pos[i]   = mesh->GetVertex(i);
-		D_pos[i] = mesh->GetVertex(i);
-		velocity[i].setZero();
-		f_ext[i].setZero();
-//		f_g[i].setZero();
-		f_g[i] = { 0.0,10.0,0.0 };
-
-
-	}
-
-	for (int i = 0; i < mesh->GetVertexNum(); i++)
-	{
-		element_pos[i].resize(Onering[i].size());
-		D_element_pos[i].resize(Onering[i].size());
-		for (int j = 0; j < Onering[i].size(); j++)
-		{
-			int index = Onering[i][j];
-			D_element_pos[i][j] = D_pos[index];
-			element_pos[i][j] = pos[index];
-		}
-	}
-
-
-	for (uint i = 0; i<mesh->GetVertexNum(); ++i)
-	{
-		weight_vec[i] = { 1.0,0.0,0.0 };
-		weight_vec_init[i] = {1.0,0.0,0.0};
-
-	}
-
-
-
-	Matrix_A.resize(mesh->GetVertexNum());				//(mesh->GetVertexNum(), 3,3)
-	Matrix_Aqq.resize(mesh->GetVertexNum());				//(mesh->GetVertexNum(), 3,3)
-	Matrix_Apq.resize(mesh->GetVertexNum());				//(mesh->GetVertexNum(), 3,3)
-	RotMat.resize(mesh->GetVertexNum());				//(mesh->GetVertexNum(), quartanion)
-
-
-	for (int i = 0; i < mesh->GetVertexNum(); i++) {
-		Matrix_A[i].setZero();
-		Matrix_Apq[i].setZero();
-		Matrix_Aqq[i].setZero();
-
-		RotMat[i].setIdentity();
-	
-
-		//set position
-
-		_Bone.push_back(i);
-	}
-
-
-//should calculate gravity 
-	for (int i = 0; i < _Bone.size(); i++) {
-		int index = _Bone[i];
-		GetCenterOfGravity(D_element_pos[index], Dg_element_pos[index], index, 1.0);
-		GetCenterOfGravity(element_pos[index], Mg_element_pos[index], index, 1.0);
-//		std::cout << index << "::::" << Dg_element_pos[index][0] << ":::::::::::::::::::::::::::" << Mg_element_pos[index][0] << std::endl;
-
-	}
-
-	std::cout << "Finish initialize SM" << std::endl;
-	std::cout << _Bone.size() << std::endl;
-	std::cout << mesh->GetVertexNum() << std::endl;
-
-}
-
-void Simulation::ComputeOnering() {
-
-	Onering.clear();
-	Onering.resize(mesh->GetVertexNum());
-
-	for (int i = 0; i < mesh->GetTetNum(); i++) {
-
-		int index0 = mesh->GetTetra(i,0) +  1;
-		for (int j = 0; j < 4; j++) {
-			Onering[mesh->GetTetra(i,j)].push_back(index0);
-		}
-
-
-		int index1 = mesh->GetTetra(i, 1) +  1;
-		for (int j = 0; j < 4; j++) {
-			Onering[mesh->GetTetra(i, j)].push_back(index1);
-		}
-
-		int index2 = mesh->GetTetra(i, 2) +  1;
-		for (int j = 0; j < 4; j++) {
-			Onering[mesh->GetTetra(i , j)].push_back(index2);
-		}
-
-		int index3 = mesh->GetTetra(i , 3) +  1;
-		for (int j = 0; j < 4; j++) {
-			Onering[mesh->GetTetra(i , j)].push_back(index3);
-		}
-
-	}
-
-	for (int i = 0; i < mesh->GetVertexNum(); i++) {
-		sort(Onering[i].begin(), Onering[i].end());
-		Onering[i].erase(std::unique(Onering[i].begin(), Onering[i].end()), Onering[i].end());
-	}
-
-
-	for (int i = 0; i < mesh->GetVertexNum(); i++) {
-		for (int j = 0; j < Onering[i].size(); j++) {
-			Onering[i][j] = Onering[i][j] - 1;
-			//std::cout << Onering[i][j] << "::::";
-		}
-		//std::cout << "" << std::endl;
-	}
-
-}
-
-
-void Simulation::GetCenterOfGravity(std::vector<Eigen::Vector3d> &vec, Eigen::Vector3d &v, int ele, double _beta) {
-	Eigen::Vector3d  g_pos = { 0.0, 0.0, 0.0 };
-
-	double sum = 0.0;
-
-	for (int i = 0; i < Onering[ele].size(); i++) {  //ele :: region
-		int index = Onering[ele][i];
-
-		g_pos += vec[i] * SetWeight(index, ele, _beta);// 
-		sum += SetWeight(index, ele, _beta);//
-
-	}
-
-	if (sum < 0.001) {
-		std::cout << "errorGCG" << std::endl;
-		system("pause");
-	}
-	else {
-		v = g_pos / sum;
-	}
-}
-
-
-
-void Simulation::GetManipulateMatrix(int ele, double _beta) {
-	//Init every Matrix
-	Matrix_A[ele].setZero();
-	Matrix_Apq[ele].setZero();
-	Matrix_Aqq[ele].setZero();
-	//calcurate matrix or each region
-
-	//	double qq[3][3];
-	Eigen::Matrix3d  pq;
-	Eigen::Matrix3d  qq;
-	Eigen::Vector3d _pi;
-	Eigen::Vector3d _qi;
-
-//	SetBasisMatrix(ele);
-	for (int i = 0; i < Onering[ele].size(); i++)
-	{
-
-		int index = Onering[ele][i];
-
-		_pi = (pos[index] - Mg_element_pos[ele]);
-		_qi = (D_pos[index] - Dg_element_pos[ele]);
-	//	_qi = Matrix_TOT[ele] * _qi;
-
-		pq = _pi*_qi.transpose();
-		qq = _qi*_qi.transpose();
-		Matrix_Apq[ele] += SetWeight(index, ele, _beta) *pq;
-		Matrix_Aqq[ele] += SetWeight(index, ele, _beta) *qq;
-
-	}
-	//Matrix_A[ele] = Matrix_Apq[ele] * Matrix_Aqq[ele].inverse();
-	//std::cout << Matrix_A[ele] << std::endl;
-	Eigen::Matrix3d E;
-
-	Eigen::FullPivLU<Eigen::Matrix3d> lu(Matrix_Aqq[ele]);
-	Eigen::Matrix3d A_qq_ele;
-	E.Identity();
-	A_qq_ele = lu.inverse();
-
-	Matrix_A[ele] = Matrix_Apq[ele] * A_qq_ele;
-	//std::cout << Matrix_A[ele] << std::endl;
-}
-
-
-double Simulation::SetWeight(int count, int region, double beta) { //count is i (vert num ) & region is r beta is depend on region
-
-	double sum = 0.0;
-	Eigen::Vector3d _qi;
-	_qi.setZero();
-
-//	SetBasisMatrix(region);
-
-	//	std::cout <<"after"<< Matrix_T_ele[region].col(0) << std::endl;
-
-	for (int k = 0; k < Onering[region].size(); k++) {
-		_qi -= D_pos[Onering[region][k]] * mass;
-		sum += mass;
-	}
-	_qi /= sum;
-	_qi += D_pos[count];
-
-	if (_qi.norm() < 0.00001) { //stem("pause");
-		_qi = Eigen::Vector3d(1.0, 0.0, 0.0);
-	}
-
-
-	/*if (abs(weight_vec[region].norm()) < 0.000001)
-	{
-		std::cout << "WeightVec" << std::endl;
-		system("pause");
-		return mass;
-	}
-	else {
-	*/	
-	Eigen::Vector3d unit1;
-	unit1 = { weight_vec[region](0) ,weight_vec[region](1),weight_vec[region](2) };
-		/*if (Matrix_T_ele[region].col(0) != unit1) {
-			std::cout << "MatT_ele" << std::endl;
-
-			system("pause");
-		}
-*/
-
-		double b = 1.0 / (sqrt(beta * beta + (1 - beta)*(1 - beta)))* (beta *weight_vec[region] + (1.0 - beta) / _qi.norm()*_qi).dot(_qi);
-		return mass*((b*b / (_qi.norm() *  _qi.norm())));//  *a + (1 - a) *Matrix_T[region]);
-
-}
-
-
-void Simulation::extractRotation(const Eigen::Matrix3d &A, Eigen::Quaterniond &q, const unsigned int maxIter)
+void Simulation::Init()
 {
-	//Eigen::AngleAxis
-	for (unsigned int iter = 0; iter < maxIter; iter++)
+	std::cout << "Initializing Simulation" << std::endl;
+
+//	for (int i = 0; i < mesh.size(); i++) {
+	//	EigenMatrixXs* a;
+	//	m_V.push_back(&(mesh[i]->m_V));
+
+	// set pointer of m_V, m_F, m_T
+	m_V = &mesh->m_V;
+	m_F = &mesh->m_F;
+	m_T = &mesh->m_T;
+
+	m_Vel.resize(mesh->m_vert_num, 3); m_Vel.setZero();
+
+	m_Inertia.resize(mesh->m_vert_num, 3);       m_Inertia.setZero();
+	m_ExternalForce.resize(mesh->m_vert_num, 3); m_ExternalForce.setZero();
+
+	setReprecomputeFlag();
+	setReprefactorFlag();
+
+	convertlameConstant();
+
+	preComputation();
+	prefactorize();
+//	/
+	//add manual parameter
+	m_iterations_per_frame = 3;
+	m_damping_coefficient = 0.001;
+
+	m_gravity_constant = 0.0;
+	m_young = 100.0;
+	m_poisson = 0.5;
+
+
+}
+
+
+void Simulation::update() {
+	std::cout << "Update Simulation ..." << std::endl;
+
+
+	//update iertial term
+	computeInertia();
+
+	//update external term
+	computeExternalForce();
+
+	integrateOptimizationMethod();
+
+	dampVelocity();
+
+}
+#include<igl/massmatrix.h>
+void Simulation::preComputation()
+{
+	std::cout << "preComputing..." << std::endl;
+// set m_B, m_W
+	m_B.clear();
+	m_W.clear();
+	// Inprement Here !! //
+	// Hint: compute and push_back "m_B" and "m_W//
+	int  j, p;
+	for (int i = 0; i < m_T->rows(); ++i) {
+		EigenMatrix3 m_B_element;
+		ScalarType   m_W_element;
+		for (j = 0; j < 3; j++) {
+			for (p = 0; p < 3; p++) {
+				m_B_element(p, j) = (*m_V)((*m_T)(i, j), p) - (*m_V)((*m_T)(i, 3), p);
+
+			}
+		}
+
+		m_W_element = 1.0 / 6.0*  fabs((m_B_element).determinant());//*/
+		m_B.push_back(m_B_element.inverse());
+		m_W.push_back(m_W_element);
+
+	}
+	//set MassMatrix
+	igl::massmatrix(*m_V, *m_T, igl::MASSMATRIX_TYPE_DEFAULT, m_MassMat);
+	ScalarType ModelVolume = 0.0;
+	for (uint i = 0; i < m_T->rows(); ++i) { ModelVolume += m_W[i]; }
+
+	std::cout << ModelVolume << std::endl;
+	system("pause");
+	m_MassMat *= (mesh->m_total_mass) / ModelVolume;
+	std::cout << mesh->m_total_mass << std::endl;
+	system("pause");
+
+	m_precomputation_flag = true;
+	std::cout << "preComputing...end" << std::endl;
+
+}
+
+void Simulation::convertlameConstant()
+{
+	m_young = 100;
+	m_poisson = 0.5;
+	m_myu = m_young / (2.f * (1.f + m_poisson));
+	m_lambda = m_young * m_poisson / ((1.f + m_poisson)*(1.f - 2.f*m_poisson));
+}
+
+
+void Simulation::computeRotMat(EigenMatrixXs& RotMat, const EigenMatrixXs& Jv)
+{
+	//// Inprement Here !! //
+	//// Hint: use "SVD"
+
+	//#pragma omp parallel {
+	int num = 0;
+#pragma omp parallel for
+
+	for (num = 0; num < m_T->rows(); num++) {
+
+		EigenMatrix3 F;
+		EigenMatrix3 U, V;
+		F.setZero();
+		F = (Jv.block(num * 3, 0, 3, 3)).transpose();
+
+
+		///constraintつけるjvが更新される
+
+		Eigen::JacobiSVD< EigenMatrix3 >svd(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		U = svd.matrixU();
+		V = svd.matrixV();
+		RotMat.block(3 * num, 0, 3, 3) = U * (V.transpose());
+
+
+	}
+}
+
+void Simulation::volumeconservation(EigenMatrix3 &F, EigenMatrix3 &B, const unsigned int tet_list[], EigenMatrixXs &X)//Bにだいれくとにいれないように注意
+{
+
+	EigenMatrix3 U, V;
+	EigenVector3 SIGMA;
+
+	singularValueDecomp(U, SIGMA, V, F);
+
+	double det_F = F.determinant();
+
+	if (det_F < 0.0) {
+
+		SIGMA[2] *= -1.0;
+
+
+		double high_val = SIGMA[0];
+		double mid_val = SIGMA[1];
+		double low_val = SIGMA[2];
+
+		if (mid_val < low_val) {
+			double temp = low_val;
+			low_val = mid_val;
+			mid_val = temp;
+
+		}
+		if (high_val < low_val) {
+			double temp = low_val;
+			low_val = high_val;
+			high_val = temp;
+
+		}
+		if (high_val < mid_val) {
+
+			double temp = mid_val;
+			mid_val = high_val;
+			high_val = temp;
+		}
+
+
+		SIGMA[0] = high_val;
+		SIGMA[1] = mid_val;
+		SIGMA[2] = low_val;
+	}
+
+	double min = 0.95;
+	double max = 1.05;
+
+	EigenMatrix3 SIGMA_new, DS;
+	//clamp
+	//glm::clamp CLAMP;
+	SIGMA_new << clamp(SIGMA(0, 0), min, max), 0.0, 0.0,
+		0.0, clamp(SIGMA(1, 0), min, max), 0.0,
+		0.0, 0.0, clamp(SIGMA(2, 0), min, max);
+
+
+	EigenMatrix3  F_new;
+
+
+
+	F_new = V.transpose();
+	SIGMA_new.applyOnTheLeft(F_new);
+	U.applyOnTheLeft(F_new);
+
+	DS = B;
+
+	F_new.applyOnTheLeft(DS);
+
+	EigenVector3 meanpos = 1 / 4.0*((X.row(tet_list[0])).transpose() + (X.row(tet_list[1])).transpose() + (X.row(tet_list[2])).transpose() + (X.row(tet_list[3])).transpose());
+	EigenVector3 newpos[4];
+	//check
+	newpos[3] = meanpos - 1 / 4.0*(DS.col(0) + DS.col(1) + DS.col(2));
+
+
+	newpos[0] = newpos[3] + DS.col(0) - X.row(tet_list[0]).transpose();
+	newpos[1] = newpos[3] + DS.col(1) - X.row(tet_list[1]).transpose();
+	newpos[2] = newpos[3] + DS.col(2) - X.row(tet_list[2]).transpose();
+	newpos[3] = newpos[3] - X.row(tet_list[3]).transpose();
+
+	for (int i = 0; i < 4; i++) {
+
+		X.row(tet_list[i]) += newpos[i].transpose();
+	}
+}
+
+
+
+void Simulation::prefactorize()
+{
+	SparseMatrix A;
+	ScalarType h2 = m_h*m_h;
+	A.resize(mesh->m_vert_num, mesh->m_vert_num);
+//	A.setZero();
+	std::cout << "preFactorizing ..." << std::endl;
+
+
+	// Hint: "A = ?"
+	setJacobianMat();
+	setLaplacianMat();
+	//jacobian 計算
+	A = m_LaplacianMat + m_MassMat / h2;
+
+	factorizeDirectSolverLLT(A, m_prefactored_LLTsolver);
+
+	m_prefactorization_flag = true;
+}
+
+
+void Simulation::dampVelocity()
+{
+	std::cout << "dampvelocity" << std::endl;
+
+//	if (std::abs(m_damping_coefficient) < EPSILON)
+//		return;
+
+	// post-processing damping
+	EigenVector3 pos_mc(0.0, 0.0, 0.0), vel_mc(0.0, 0.0, 0.0);
+	unsigned int i, size;
+	ScalarType denominator(0.0), mass(0.0);
+	size = mesh->m_vert_num;
+
 	{
-		Eigen::Matrix3d R = q.matrix();
-		Eigen::Vector3d omega = (R.col(0).cross(A.col(0)) + R.col
-		(1).cross(A.col(1)) + R.col(2).cross(A.col(2))
-			) * (1.0 / fabs(R.col(0).dot(A.col(0)) + R.col
-			(1).dot(A.col(1)) + R.col(2).dot(A.col(2))) + 1.0e-9);
-		double w = omega.norm();
-		if (w < 1.0e-9)
-			break;
-		q = Eigen::Quaterniond(Eigen::AngleAxisd(w, (1.0 / w) * omega)) *	q;
-		q.normalize();
-	}
-}
-
-
-void Simulation::DeformVector() {
-	////calcurate gravity of element
-
-
-	for (int ele = 0; ele < mesh->GetVertexNum(); ele++) {
-		weight_vec[ele] = RotMat[ele] * weight_vec_init[ele];
-		//std::cout << RotMat[ele].toRotationMatrix() << std::endl;
-	}
-
-//should re calculate gravity of center
-	for (int i = 0; i < _Bone.size(); i++) {
-		int index = _Bone[i];
-		GetCenterOfGravity(D_element_pos[index], Dg_element_pos[index], index, 1.0);
-	}
-
-
-	//for (int i = 0; i < Muscle.size(); i++) {
-	//	int index = Muscle[i];
-	//	GetCenterOfGravity(D_element_pos[index], Dg_element_pos[index], index, beta_M);	// initial
-	//}
-}
-void Simulation::Integration(int ele, double alpha, double _beta) {
-
-	Eigen::Vector3d goal = { 0.0, 0.0, 0.0 };
-	GetGoalPosition(goal, ele, _beta); //add the weight
-
-	velocity[ele] += alpha * (goal - pos[ele]) / time + (f_ext[ele] + f_g[ele]) / mass*time;// +time *Rot_Mat[i][j] / mass*ganma;// +f_coll[i][j] / mass*time;		//各頂点速度の更新
-	pos[ele] += time * velocity[ele];																			//各頂点位置の更新	
-	velocity[ele] *= 0.8;
-
-}
-
-void Simulation::Integration_bone(int ele, double alpha) {
-	int index = _Bone[ele];
-
-	/*VERTEX3D V = dst.GetVertex(index);
-	Eigen::Vector3d goal;
-
-	goal(0) = V.x;  goal(1) = V.y;   goal(2) = V.z;		*/	// 変形後の座標格納
-	
-	//velocity[index] += alpha * (goal - pos[index]) / time + (f_ext[index] + f_g[index]) / mass*time;// +time *Rot_Mat[i][j] / mass*ganma;// +f_coll[i][j] / mass*time;		//各頂点速度の更新
-	//pos[index] += time * velocity[index];																			//各頂点位置の更新	
-	//velocity[index] *= 0.8;
-}
-
-void Simulation::GetGoalPosition(Eigen::Vector3d &goal, int ele, double _beta) {//write for element (ele is vertex)
-
-	goal.setZero();
-	double sum = 0.0;
-	for (int i = 0; i < Onering[ele].size(); i++) // summation  for r including i 
-	{
-
-		int index = Onering[ele][i];	//region index
-		Eigen::Vector3d qir;
-		qir = D_pos[ele] - Dg_element_pos[index];
-		goal += (RotMat[index] * qir + Mg_element_pos[index]) *SetWeight(ele, index, _beta);
-		sum += SetWeight(ele, index, _beta);
-
-	}
-	if (sum < 0.001) {
-		std::cout << "errorGGP" << std::endl;
-		system("pause");
-	}
-	else {
-		goal = goal / sum;
-	}
-}
-
-
-void Simulation::Update() {
-	//
-	// Calculation current center of gravity
-	for (int i = 0; i < _Bone.size(); i++) {
-		int index = _Bone[i];
-		GetCenterOfGravity(element_pos[index], Mg_element_pos[index], index, 1.0);
-	//	std::cout << Mg_element_pos[index][0]<<":::"<<Mg_element_pos[index][1]<< ":::" << Mg_element_pos[index][2] << std::endl;
-
-	}
-	for (int i = 0; i < _Bone.size(); i++) {
-		int index = _Bone[i];
-		GetManipulateMatrix(index, 1.0);
-	}
-
-	for (int i = 0; i < _Bone.size(); i++) {
-		int index = _Bone[i];
-		extractRotation(Matrix_A[index], RotMat[index], 1);
-	}
-
-	////---no constraint
-	for (int i = 0; i < _Bone.size(); i++) {
-		int index = _Bone[i];
-		Integration(index, 1.0, 1.0);
-	}
-
-
-}
-
-void Simulation::Positon_to_mesh() {
-
-	for (uint i = 0; i<mesh->GetVertexNum(); ++i)
-	{
-		mesh->SetVertex(i, pos[i]) ;
-	}
-
-}
-
-
-void Simulation::SetElement() {
-	for (int i = 0; i <mesh->GetVertexNum(); i++)
-	{
-		for (int j = 0; j < Onering[i].size(); j++)
+		for (int i = 0; i < size; ++i)
 		{
-			int index = Onering[i][j];
-			element_pos[i][j] = pos[index];
+			mass = m_MassMat.coeff(i, i);
+
+			pos_mc += mass*(((*m_V).row(i)).transpose());
+			vel_mc += mass*(((m_Vel).row(i)).transpose());
+			denominator += mass;
+		}
+		std::cout << denominator << std::endl;
+		assert(denominator != 0.0);
+		pos_mc /= denominator;
+		vel_mc /= denominator;
+
+		EigenVector3 angular_momentum(0.0, 0.0, 0.0), r(0.0, 0.0, 0.0);
+		EigenMatrix3 inertia, r_mat;
+
+		inertia.setZero(); r_mat.setZero();
+
+		for (int i = 0; i < size; ++i)
+		{
+			mass = m_MassMat.coeff(i, i);
+
+			r = ((*m_V).row(i)).transpose() - pos_mc;
+
+
+			//r_mat = EigenMatrix3(0.0,  r.z, -r.y,
+			//                    -r.z, 0.0,  r.x,
+			//                    r.y, -r.x, 0.0);
+
+			r_mat.coeffRef(0, 1) = r[2];
+			r_mat.coeffRef(0, 2) = -r[1];
+			r_mat.coeffRef(1, 0) = -r[2];
+			r_mat.coeffRef(1, 2) = r[0];
+			r_mat.coeffRef(2, 0) = r[1];
+			r_mat.coeffRef(2, 1) = -r[0];
+
+			inertia += r_mat * r_mat.transpose() * mass;
+		}
+		EigenVector3 angular_vel = inertia.inverse() * angular_momentum;
+
+		EigenVector3 delta_v(0.0, 0.0, 0.0);
+
+		for (int i = 0; i < size; ++i)
+		{
+			r = ((*m_V).row(i)).transpose() - pos_mc;
+			delta_v = vel_mc + angular_vel.cross(r) - ((m_Vel.row(i)).transpose());
+			m_Vel.row(i) += m_damping_coefficient * (delta_v.transpose());
+		}
+	}
+}
+
+void Simulation::computeInertia()
+{
+	// Inprement Here !! //
+	// Hint: use "m_Inertia = ?"
+	std::cout << "compute inertial" << std::endl;
+
+	m_Inertia.setZero();
+	for (int y = 0; y < mesh->m_vert_num; ++y) {
+		for (int x = 0; x < 3; ++x) {
+			m_Inertia.coeffRef(y, x) = m_Vel(y, x) *m_h + (*m_V)(y, x);// +
+		}
+	}
+}
+
+
+void Simulation::computeExternalForce()
+{
+	std::cout << "computingexternal" << std::endl;
+
+	m_ExternalForce.setZero();
+
+	// gravity
+	// Inprement Here !! //
+	// Hint: use "m_ExternalForce(i, 1) = ?"
+
+	for (unsigned int i = 0; i < mesh->m_vert_num; ++i)
+	{
+		m_ExternalForce(i, 1) = -1.0*m_MassMat.coeff(i, i) *  m_gravity_constant;
+	}
+}
+
+void Simulation::integrateOptimizationMethod()
+{
+	// check if precomputation is done (for Debag)
+	if (m_precomputation_flag == false) { fprintf(stdout, "precompution dosen't work\n"); }
+	// take a initial guess
+	EigenMatrixXs pos_next = m_Inertia;//感性力のみ
+										 // while loop until converge or exceeds maximum iterations
+	bool converge = false;
+
+	for (unsigned int iteration_num = 0; !converge && iteration_num < m_iterations_per_frame; ++iteration_num)
+	{
+			converge = integrateLocalGlobalOneIteration(pos_next);
+	}
+	std::cout << "update" << std::endl;
+
+	// update q_{n+1}
+	updatePosAndVel(pos_next);
+
+}
+
+// main
+
+bool Simulation::integrateLocalGlobalOneIteration(EigenMatrixXs& X)
+{
+	//// local step
+	EigenMatrixXs RotMat(m_T->rows() * 3, 3);       // (#TetNum*dim) * dim
+	EigenMatrixXs Jv = m_JacobianMat * X;      // (#TetNum*dim) * dim
+	computeRotMat(RotMat, Jv);
+
+	//	Xの更新体積保存
+	int ini;
+	for (ini = 0; ini< m_T->rows(); ini++) {
+
+
+		EigenMatrix3 F = (Jv.block(ini * 3, 0, 3, 3)).transpose();
+		EigenMatrix3 B = m_B[ini].inverse();
+		uint tet_list[4] = { (*m_T)(ini, 0), (*m_T)(ini, 1),(*m_T)(ini, 2), (*m_T)(ini, 3) };
+		volumeconservation(F, B, tet_list, X);
+
+	}
+
+	std::cout << "local step end" << std::endl;
+	// global step
+	// Inprement Here !! //
+	// Hint: use "b = ?"
+	// Hint: you should not add inertia yet
+	//  b=jrを入れて
+	EigenMatrixXs b(mesh->m_vert_num, 3);
+	b.setZero();
+
+	int i, j, k, p;
+	for (i = 0; i < m_T->rows(); ++i)
+	{
+		for (j = 0; j < 3; j++) {//xyz
+			for (k = 0; k < 3; k++) {//ヤコビアンの行情報
+				double rjk = RotMat(3 * i + j, k);
+				for (p = 0; p < mesh->m_vert_num; p++) {
+					b(p, j) = b(p, j) + m_JacobianMat.coeff(3 * i + k, p) *rjk;
+				}
+			}
 		}
 	}
 
-	DeformVector();
+
+	std::cout << "writingX" << std::endl;//sum1:x2x4の係数
+
+
+										 // add effect of inertia
+										 // Inprement Here !! //
+										 // Hint: use "b = ?"
+										 // Hint: add intertia here
+
+
+	EigenMatrixXs inertial(mesh->m_vert_num, 3);
+	std::cout << "computing inertia" << std::endl;//sum1:x2x4の係数
+	inertial = m_MassMat*m_Inertia / (m_h*m_h);
+	b+= inertial+ m_ExternalForce;
+	std::cout << "computing X" << std::endl;//sum1:x2x4の係数
+
+	for (int i = 0; i < 3; i++) {
+		X.col(i) = m_prefactored_LLTsolver.solve(b.col(i));
+	}
+	return false;
+}
+
+
+#pragma region matrices and prefactorization
+void Simulation::setLaplacianMat()
+{
+
+
+	m_LaplacianMat.resize(mesh->m_vert_num, mesh->m_vert_num);
+	m_LaplacianMat.setZero();
+
+	std::vector<SparseMatrixTriplet> l_triplets;
+	l_triplets.clear();
+	for (uint i = 0; i<m_T->rows(); ++i)
+	{
+		uint tet_list[4] = { (*m_T)(i, 0), (*m_T)(i, 1),(*m_T)(i, 2), (*m_T)(i, 3) };
+		// Inprement Here !! //
+		// Hint: use "computeElementLaplacianMat"
+		computeElementLaplacianMat(m_B[i], m_W[i], tet_list, l_triplets);
+	}
+
+	// add attachment constraint
+	//for (std::vector<Constraint*>::iterator it_c = m_constraints.begin(); it_c != m_constraints.end(); ++it_c)
+	//{
+	//	(*it_c)->computeLaplacianMat(l_triplets);
+	//}
+
+	m_LaplacianMat.setFromTriplets(l_triplets.begin(), l_triplets.end());
+}
+
+void Simulation::setJacobianMat()
+{
+	m_JacobianMat.resize(m_T->rows() * 3, mesh->m_vert_num);
+	std::cout << "ヤコビアン計算" << std::endl;
+
+	m_JacobianMat.setZero();
+
+
+	std::vector<SparseMatrixTriplet> j_triplets;
+	j_triplets.clear();
+
+	for (uint i = 0; i<m_T->rows(); ++i)
+	{
+		uint tet_list[4] = { (*m_T)(i,0), (*m_T)(i,1), (*m_T)(i,2), (*m_T)(i,3) };
+		// Inprement Here !! //
+		// Hint: use "computeElementJacobianMat"
+		computeElementJacobianMat(m_B[i], m_W[i], tet_list, i, j_triplets);
+	}
+
+	m_JacobianMat.setFromTriplets(j_triplets.begin(), j_triplets.end());
+
+}
+#pragma region utilities
+void Simulation::updatePosAndVel(const EigenMatrixXs NewPos)
+{
+	m_Vel = (NewPos - (*m_V)) / m_h;//vを更新
+	*m_V = NewPos;//次のステップのひとつ前になる
 
 }
 
 
 
-//void Simulation::SetBasisMatrix(int i) {
+void Simulation::singularValueDecomp(EigenMatrix3& U, EigenVector3& SIGMA, EigenMatrix3& V, const EigenMatrix3& A)
+{
+	Eigen::JacobiSVD<EigenMatrix3> svd;
+	svd.compute(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
-//Matrix_T[i](0, 0) = weight_vec[i](0);
-//Matrix_T[i](1, 0) = weight_vec[i](1);
-//Matrix_T[i](2, 0) = weight_vec[i](2);
-//Matrix_T_ele[i].col(0) = weight_vec[i];
+	U = svd.matrixU();
+	V = svd.matrixV();
+	SIGMA = svd.singularValues();
 
-//if (weight_vec[i](1) < 0.00001 && weight_vec[i](2) < 0.00001) {
+	ScalarType detU = U.determinant();
+	ScalarType detV = V.determinant();
 
-//	Matrix_T[i](0, 1) = weight_vec[i](1);
-//	Matrix_T[i](1, 1) = -weight_vec[i](0);
-//	Matrix_T[i](2, 1) = 0.0;
-//	Matrix_T[i].col(1) = Matrix_T[i].col(1) / (Matrix_T[i].col(1)).norm();
-//	Matrix_T_ele[i].col(1) = Matrix_T[i].col(1);
-//}
-//else {
-//	Matrix_T[i](0, 1) = 0.0;
-//	Matrix_T[i](1, 1) = weight_vec[i](2);
-//	Matrix_T[i](2, 1) = -weight_vec[i](1);
-//	//正規化
-//	Matrix_T[i].col(1) = Matrix_T[i].col(1) / Matrix_T[i].col(1).norm();
-//	Matrix_T_ele[i].col(1) = Matrix_T[i].col(1);
-//}
+	// make sure that both U and V are rotation matrices without reflection
+	if (detU < 0)
+	{
+		U.block<3, 1>(0, 2) *= -1;
+		SIGMA[2] *= -1;
+	}
+	if (detV < 0)
+	{
+		V.block<3, 1>(0, 2) *= -1;
+		SIGMA[2] *= -1;
+	}
 
-//Matrix_T[i].col(2) = (Matrix_T[i].col(0)).cross(Matrix_T[i].col(1));
-//Matrix_T[i].col(2) = Matrix_T[i].col(2) / (Matrix_T[i].col(2)).norm();
-//Matrix_T_ele[i].col(2) = Matrix_T[i].col(2);
-//Matrix_T[i] = Matrix_T[i] * Matrix_T[i].transpose();
-//Matrix_T[i] = Matrix_T[i] / Matrix_T[i].determinant();
+}
 
-//}
+
+void Simulation::computeElementLaplacianMat(const EigenMatrix3 &B, const ScalarType W, const unsigned int tet_list[], std::vector<SparseMatrixTriplet>& l_triplets)
+{
+	//#pragma omp parallel for
+	//m_myu = 2.0;
+	for (int i = 0; i < 3; i++) {
+		for (int j = i; j < 3; j++) {
+			if (i == j) {
+				for (int k = 0; k < 3; k++) {
+					l_triplets.push_back(SparseMatrixTriplet(tet_list[i], tet_list[i], m_myu * 1.0 * W  * B(i, k) * B(i, k)));
+				}
+			}
+			else {
+				for (int k = 0; k < 3; k++) {
+					l_triplets.push_back(SparseMatrixTriplet(tet_list[j], tet_list[i], m_myu * 1.0 * W  * B(i, k) * B(j, k)));
+					l_triplets.push_back(SparseMatrixTriplet(tet_list[i], tet_list[j], m_myu * 1.0 * W  * B(i, k) * B(j, k)));
+				}
+			}
+		}
+	}
+	for (int k = 0; k < 3; k++) {
+		double sum = 0;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				sum += B(k, i)*B(j, i);
+			}
+		}
+		l_triplets.push_back(SparseMatrixTriplet(tet_list[k], tet_list[3], m_myu * W * -1.0 * sum));
+		l_triplets.push_back(SparseMatrixTriplet(tet_list[3], tet_list[k], m_myu * W * -1.0 * sum));
+	}
+	for (int i = 0; i < 3; i++) {
+		double beki_sum = 0;
+		for (int j = 0; j < 3; j++) {
+			beki_sum += B(j, i);
+		}
+		l_triplets.push_back(SparseMatrixTriplet(tet_list[3], tet_list[3], m_myu * W * 1.0*beki_sum *beki_sum));
+	}
+
+
+
+
+
+}
+
+
+void Simulation::computeElementJacobianMat(const EigenMatrix3 &B, const ScalarType W, const unsigned int tet_list[], const unsigned int ele_num, std::vector<SparseMatrixTriplet>& j_triplets)
+{
+	//	// Inprement Here !! //
+	//	// Small Hint: use "m_myu"
+
+	int i, j;
+	//	m_myu = 2.0;
+
+	for (j = 0; j< 3; j++) {//xyz
+
+		for (i = 0; i < 3; i++) {//1234
+			j_triplets.push_back(SparseMatrixTriplet(ele_num * 3 + i, tet_list[j], -1.0* m_myu * W * B(j, i)));
+			j_triplets.push_back(SparseMatrixTriplet(ele_num * 3 + i, tet_list[3], 1.0 * m_myu * W * B(j, i)));
+		}
+	}
+
+}
+double Simulation::clamp(double n, double lower, double upper) {
+
+	return std::max(lower, std::min(n, upper));
+}
+void Simulation::factorizeDirectSolverLLT(const SparseMatrix& Mat_A, Eigen::SimplicialLLT<SparseMatrix, Eigen::Upper>& lltSolver)
+{
+	SparseMatrix A_prime = Mat_A;
+	SparseMatrix I(Mat_A.cols(), Mat_A.rows());
+	//	I.setIdentity();
+	lltSolver.analyzePattern(A_prime);
+	lltSolver.factorize(A_prime);
+	ScalarType Regularization = 0.00001;
+	bool success = true;
+	while (lltSolver.info() != Eigen::Success)
+	{
+		Regularization *= 10;
+		A_prime = A_prime + Regularization*I;
+		lltSolver.factorize(A_prime);
+		success = false;
+	}
+	char* warning_msg = "";
+	if (!success)
+		std::cout << "Warning: " << warning_msg << " adding " << Regularization << " identites.(llt solver)" << std::endl;
+}

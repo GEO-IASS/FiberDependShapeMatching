@@ -33,12 +33,12 @@ typedef enum
 class Mesh
 {
 	//friend class AntTweakBarWrapper;
-	//friend class Simulation;
+	friend class Simulation;
 	friend class Camera;
 
 public:
-	Mesh() : m_mesh_type() {}
-	Mesh(MeshType mesh_type) : m_mesh_type(mesh_type) {}
+	Mesh() : mesh_type() {}
+	Mesh(MeshType mesh_type) : mesh_type(mesh_type) {}
 	virtual ~Mesh() { cleanup(); }
 
 	void    reset();
@@ -50,30 +50,29 @@ public:
 	// member accessor
 	//virtual inline uint GetNumberOfVertices() { return m_vert_num; }
 	//virtual inline uint GetDimension() { return m_system_dim; }
-	inline MeshType GetMeshType() { return m_mesh_type; }
+	inline MeshType GetMeshType() { return mesh_type; }
 	void set_scale(double num) { m_tet_scaling = num; }
 
 public:
 	//get num
 	uint GetVertexNum() { return m_vert_num;  }
 	uint GetTetNum() { return m_T.size(); }
-	Eigen::Vector3d GetVertex(const int i) { return m_V[i]; }
-	int GetTetra(const int i, const int j) { return m_T[i][j]; }
-	void SetVertex(const int i, Eigen::Vector3d _vert) { m_V[i] = _vert; }
+	//Eigen::Vector3d GetVertex(const int i) { return m_V[i]; }
+	//int GetTetra(const int i, const int j) { return m_T[i][j]; }
+	//void SetVertex(const int i, Eigen::Vector3d _vert) { m_V[i] = _vert; }
 
 protected:
-	MeshType m_mesh_type;
+	MeshType mesh_type;
 
 	uint m_vert_num;   // m
 	uint m_dim;        // 2 or 3
 	uint m_system_dim; // 3m
 	//uint 
-
-	std::vector<Eigen::Vector3d> m_V0;	// rest pose
-	std::vector<Eigen::Vector3d> m_V;	// current pose
-	std::vector<Eigen::Vector3d> m_N;	// current normal
-	std::vector<std::vector<int>> m_F;  // tri index
-	std::vector<std::vector<int>> m_T;  // tet index
+	Eigen::MatrixXd  m_V0;	// rest pose
+	Eigen::MatrixXd  m_V;	// current pose
+	Eigen::MatrixXd  m_N;	// current normal
+	Eigen::MatrixXi  m_F;  // tri index
+	Eigen::MatrixXi  m_T;  // tet index
 
 						// for visualization
 	std::vector<glm::vec3> m_positions;
@@ -85,7 +84,7 @@ protected:
 	ScalarType m_total_mass;
 	ScalarType m_tet_scaling;
 
-	char m_mesh_file_path[256];
+	char mesh_file_path[256];
 
 
 protected:

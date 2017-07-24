@@ -49,8 +49,7 @@ glm::vec3 Eigen2GLM(const EigenVector3& eigen_vector);
 EigenVector3 GLM2Eigen(const glm::vec3& glm_vector);
 
 // solver
-void factorizeDirectSolverLLT(const SparseMatrix& A, Eigen::SimplicialLLT<SparseMatrix, Eigen::Upper>& lltSolver, char* warning_msg = "");
-void factorizeDirectSolverLDLT(const SparseMatrix& A, Eigen::SimplicialLDLT<SparseMatrix, Eigen::Upper>& ldltSolver, char* warning_msg = "");
+
 
 double Height(const EigenVector3& v1, const EigenVector3& v2, const EigenVector3& v3, const EigenVector3& v4); // Height of Tetrahedron
 #endif

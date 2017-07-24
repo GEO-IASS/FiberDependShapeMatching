@@ -33,7 +33,7 @@
 
 #include "opengl_headers.h"
 #include "common.h"
-#include "math_header.h"
+//#include "math_header.h"
 #include "mesh.h"
 
 //forward declaration

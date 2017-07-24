@@ -46,11 +46,11 @@ void Camera::Reset(int width, int height)
 	m_pitch = 45.0;
 	m_lookat = glm::vec3(0.0, 4.5, 0.0);
 	m_up = glm::vec3(0.0, 1.0, 0.0);
-	m_fovy = 60.0;
+	m_fovy = 30.0;
 	m_width = width;
 	m_height = height;
-	m_znear = 0.1;
-	m_zfar = 500.0;
+	m_znear =0.1;
+	m_zfar = 50.0;
 
 	updateViewMatrix();
 	updateProjectionMatrix();
@@ -60,7 +60,7 @@ void Camera::Lookat(Mesh* mesh)
 {
 	unsigned int mid_index = mesh->m_vert_num / 2;
 
-	EigenVector3 lookat = mesh->m_V[mid_index];// [0], mesh->m_V[mid_index, 1), mesh->m_V(mid_index, 2) };
+	EigenVector3 lookat = {mesh->m_V(mid_index,0), mesh->m_V(mid_index, 1), mesh->m_V(mid_index, 2) };
 	m_lookat = glm::vec3(lookat[0], lookat[1], lookat[2]);
 	updateViewMatrix();
 }
@@ -207,4 +207,5 @@ void Camera::updateViewMatrix()
 void Camera::updateProjectionMatrix()
 {
 	m_projection = glm::perspective(m_fovy, static_cast<float>(m_width) / static_cast<float>(m_height), m_znear, m_zfar);
+
 }

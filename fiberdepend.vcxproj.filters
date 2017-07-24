@@ -28,6 +28,9 @@
     <Filter Include="ソース ファイル\camera">
       <UniqueIdentifier>{3c3b47fd-853a-455a-9414-653562168463}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\LinearBlendSkinnning">
+      <UniqueIdentifier>{d342fef4-4956-4561-b0d1-8e74fcb31dd5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

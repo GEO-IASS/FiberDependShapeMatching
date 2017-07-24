@@ -26,7 +26,7 @@
 //                                                                                  //
 // Contact Tiantian Liu (ltt1598@gmail.com) if you have any questions.              //
 //----------------------------------------------------------------------------------//
-
+#pragma once
 #include "io_mesh.h"
 
 MeshLoader::MeshLoader()

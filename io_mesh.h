@@ -26,7 +26,7 @@
 //                                                                                  //
 // Contact Tiantian Liu (ltt1598@gmail.com) if you have any questions.              //
 //----------------------------------------------------------------------------------//
-
+#pragma once
 #ifndef _IO_MESH_H_
 #define _IO_MESH_H_
 

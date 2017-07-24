@@ -1,14 +1,20 @@
 #pragma once
 #include "mesh.h"
 
+class Mesh;
+
+// for projective dyanmics
+
 class Simulation
 {
 public:
 	Simulation();
 	~Simulation();
 
-	Mesh *mesh;
-	void SetMesh(Mesh * i_mesh) { mesh = i_mesh, ComputeOnering(); }
+	//std::vector<Mesh*> mesh;
+	Mesh* mesh;
+	//void SetMesh(std::vector<Mesh*> i_meshs) { mesh = i_meshs; } // add the mesh all
+	void SetMesh(Mesh* i_meshs) { mesh = i_meshs; } 
 	void Init();
 
 	double mass = 1.0;
@@ -16,77 +22,107 @@ public:
 
 	//set parameter
 
+	// linline function
+
+	// inline functions
+	inline void setReprecomputeFlag() { m_precomputation_flag = false; }
+	inline void setReprefactorFlag() { m_prefactorization_flag = false; }
+
+	// main function 
+	void update();
+
+
+protected:
+
+	// flags
+	bool m_precomputation_flag;
+	bool m_prefactorization_flag;
+
+
 	//-----------------------Parameter (Always calculated)-----------------------------------------//
 
-	std::vector<Eigen::Vector3d>          pos;							//current velocity      (vertnum,3)
-	std::vector<Eigen::Vector3d>        D_pos;							//vertex of init        (vertnum,3)
-	std::vector<Eigen::Vector3d>     velocity;						    //current velocity      (vertnum,3)
-	std::vector<Eigen::Vector3d>        f_ext;							//external force
-	std::vector<Eigen::Vector3d>          f_g;							//gravity force
+	//std::vector<EigenMatrixXs*>   m_V;						//current position        (vertnum,3)
+	//std::vector<EigenMatrixXi*>   m_F;						//current velocity      (vertnum,3)
+	//std::vector<EigenMatrixXi*>   m_T;						//external force
+	//std::vector<EigenMatrixXs>  m_Vel;					//gravity force
 
-	//-------------------------for element------------------------------------------------//
-
-	//Position for element
-	std::vector<std::vector<Eigen::Vector3d>>   element_pos;		    //vertex of current for element   (vertnum,Oneringsize,3)
-	std::vector<std::vector<Eigen::Vector3d>> D_element_pos;			//vertex of init for element      (vertnum,Oneringsize,3)
-																		//Center of mass for element
-	std::vector<Eigen::Vector3d> Mg_element_pos;			//element vertex (center of mass//current)        (vertnum,3)
-	std::vector<Eigen::Vector3d> Dg_element_pos;			//element vertex (center of mass//init)           (vertnum,3)
-
-	//-------------------------Fiber vector-------------------------------------------//
-
-	std::vector<Eigen::Vector3d>   weight_vec;					        //weight vector         (vertnum,3)   illustrationg as a color in
-	std::vector<Eigen::Vector3d>   weight_vec_init;					    //weight vector init       (vertnum,3)
+	EigenMatrixXs*   m_V;						//current position        (vertnum,3)
+	EigenMatrixXi*   m_F;						//current velocity      (vertnum,3)
+	EigenMatrixXi*   m_T;						//external force
+	EigenMatrixXs  m_Vel;					//gravity force
 
 
-   //--------------------------Region Calcurate ------------------------------------//
-	
-   // Make Matrix Rotmat and Matrix A
 
-	std::vector<Eigen::Quaterniond> RotMat;					//(vertnum,3*3)
-	std::vector<Eigen::Matrix3d>  Matrix_A;					//(vertnum,3*3)
-	std::vector<Eigen::Matrix3d>  Matrix_Apq;				//(vertnum,3*3)
-	std::vector<Eigen::Matrix3d>  Matrix_Aqq;				//(vertnum,3*3)
-
-	//-------------------------------compute one rings--------------------------------//
-
-	void ComputeOnering();
-	std::vector<std::vector<int>> Onering;
-
-	//--------------------------------SHape Matching-----------------------------------//
-
-	//-------------main solution---------------------//
-	void Update();
-
-
-	double SetWeight(int count, int region, double beta);
-	void GetCenterOfGravity(std::vector<Eigen::Vector3d> &vec, Eigen::Vector3d &v, int ele, double _beta);
-	//void SetBasisMatrix(int ele, double _beta);
-
-	//---------setting matrix A-----------------------------//
-	void GetManipulateMatrix(int ele, double _beta);
-
-	//------------for solve 
-	void extractRotation(const Eigen::Matrix3d &A, Eigen::Quaterniond &q, const unsigned int maxIter);
-
-
-	//-----------------prepare calculation for next------------------//
-	void DeformVector();
-	void SetElement();
+	SparseMatrix m_MassMat;					//Mass Matrix
+	SparseMatrix m_Inertia;					//Inertial Force
+	EigenMatrixXs m_ExternalForce;			//External Force
 
 	
-	//-------------gola position-------------------------------------//
-	void GetGoalPosition(Eigen::Vector3d &goal, int ele, double _beta);
-	void Integration_bone(int ele, double alpha);
-	void Integration(int ele, double alpha, double _beta);
+	//-------------------------for Precomputation------------------------------------------------//
+
+	std::vector<EigenMatrix3> m_B; // Dm inverses
+	std::vector<ScalarType>   m_W; // volume of Te
 
 
-	//--------------------set region 
-	std::vector <int > _Bone;
+	
+								  
+										// for prefactorization
+	SparseMatrix m_LaplacianMat;
+	SparseMatrix m_JacobianMat;
+	Eigen::SimplicialLLT<SparseMatrix, Eigen::Upper> m_prefactored_LLTsolver;
+
+	// simulation constants
+	ScalarType   m_h; // time_step
+	uint m_iterations_per_frame; // for optimization method, number of iterations
+
+	 
+    // ------------------------------simulation constants-------------------------------------------//
+	ScalarType m_gravity_constant;
+	ScalarType m_damping_coefficient;
 
 
-	//-----------------------for draw
-	void Positon_to_mesh();
+	ScalarType m_young, m_young_old;
+	ScalarType m_poisson, m_poisson_old;
+	ScalarType m_myu;
+	ScalarType m_lambda;
+
+
+	//----------------------------Functions for update simulation ----------------------------------//
+private:
+	
+	void preComputation();
+	void convertlameConstant();
+
+	void dampVelocity();
+	void computeInertia(); // calculate the inertia term: y = current_pos + current_vel*h
+	void computeExternalForce(); // wind force is propotional to the area of triangles projected on the tangential plane
+
+	void singularValueDecomp(EigenMatrix3& U, EigenVector3& SIGMA, EigenMatrix3& V, const EigenMatrix3& A);
+
+
+	// integration scheme
+	void integrateOptimizationMethod();
+
+	bool integrateLocalGlobalOneIteration(EigenMatrixXs& X);
+
+	// for local global method 
+	void computeRotMat(EigenMatrixXs& RotMat, const EigenMatrixXs& Jv);
+	void computeElementLaplacianMat(const EigenMatrix3 &B, const ScalarType W, const unsigned int tet_list[], std::vector<SparseMatrixTriplet>& l_triplets);
+	void computeElementJacobianMat(const EigenMatrix3 &B, const ScalarType W, const unsigned int tet_list[], const unsigned int ele_num, std::vector<SparseMatrixTriplet>& j_triplets);
+	void volumeconservation(EigenMatrix3 &F, EigenMatrix3 &B, const unsigned int tet_list[], EigenMatrixXs &X);
+
+	void setLaplacianMat();
+	void setJacobianMat();
+
+
+	void prefactorize();
+
+
+	double clamp(double n, double lower, double upper);
+
+	// utility functions
+	void updatePosAndVel(const EigenMatrixXs NewPos);
+	void factorizeDirectSolverLLT(const SparseMatrix& Mat_A, Eigen::SimplicialLLT<SparseMatrix, Eigen::Upper>& lltSolver);//, char* warning_msg = "");
 
 };
 

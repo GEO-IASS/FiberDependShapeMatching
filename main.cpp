@@ -54,14 +54,13 @@ void paintGL() {
 	render->DeactivateShaderprog();
 
 
-
 }
 
 void update() {
-	simulation->Update();
-	simulation->SetElement();
-	simulation->Positon_to_mesh();
-	std::cout << count << std::endl;
+    simulation->update();
+//	simulation->SetElement();
+//	simulation->Positon_to_mesh();
+//	std::cout << count << std::endl;
 	count++;
 }
 
@@ -129,16 +128,17 @@ int main(int argc, char **argv) {
 
 
 	while (glfwWindowShouldClose(window) == GL_FALSE) {
-		// アニメーション
-		update();
+		
 		// 描画
 		paintGL();
+		// アニメーション
+		update();
 		// 描画用バッファの切り替え
 		glfwSwapBuffers(window);
-		glfwWaitEvents();
+	
 		mouse_motion(window);
 		glfwPollEvents();
-//		system("pause");
+		system("pause");
 	}
 
 
@@ -148,6 +148,7 @@ int main(int argc, char **argv) {
 
 void mouse_motion(GLFWwindow *const window)
 {
+	//glfwWaitEvents();
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) != GLFW_RELEASE) {
 		double x, y;
 		glfwGetCursorPos(window, &x, &y);
